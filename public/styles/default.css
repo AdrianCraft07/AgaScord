@@ -1,0 +1,26 @@
+* {
+    margin: 0;
+    padding: 0%;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: #fff
+}
+body {
+    background: var(--background);
+}
+
+:root{
+    --scroll-color: red;
+    --scroll-background-color: #0000;
+    --background: rgb(32, 32, 32);
+}
+
+::-webkit-scrollbar{
+    background: var(--scroll-background-color);
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-thumb{
+    border-radius: 10px;
+    background: var(--scroll-color);
+    
+}

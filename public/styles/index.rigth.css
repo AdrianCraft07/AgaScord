@@ -1,0 +1,49 @@
+div#rigth {
+  position: absolute;
+  right: 0;
+  width: 250px;
+  height: 100%;
+  background: #0006;
+}
+
+div#members {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overflow-y: scroll;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+img.active-true {
+  border-color: var(--user-status-online);
+  border-style: solid;
+}
+
+img.active-false {
+  border-color: var(--user-status-offline);
+  border-style: solid;
+}
+
+div.member {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+div.member:hover {
+  background: #4449;
+  border-radius: 5px;
+}
+
+div.userName {
+  display: flex;
+  flex-direction: row;
+}
+
+div.userName:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}

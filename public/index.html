@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat</title>
+  <link type="text/css" rel="stylesheet" href="/styles/index.css"/>
+  <link type="text/css" rel="stylesheet" href="/styles/index.custom.css">
+
+  <script type="module">
+    import {$} from '/js/$.js';
+    import {createElementDom} from '/js/jsx.js';
+    import {createNotification} from '/js/notification.js'
+
+    const login = async () => {
+      if (localStorage.length <= 0 && localStorage.getItem('EMAIL') && localStorage.getItem('PASSWORD')) return {}
+      return await fetch('http://%HOST%/login', { method: 'POST', body: JSON.stringify({ email: localStorage.getItem('EMAIL'), password: localStorage.getItem('PASSWORD') }) }).then(r => r.json()).then(j => JSON.parse(j.data))
+    }
+    const server = '%SERVER%';
+    const channel = '%CHANNEL%';
+    let members = []
+    async function io() {
+      const user = await login()
+      if (!user?.id) location.href = 'http://%HOST%/login'
+      return new Promise((resolve, reject) => {
+        const socket = new WebSocket(`ws://%HOST%`);
+        const events = new Map();
+        socket.onmessage = event => {
+          const data = JSON.parse(event.data);
+          if (events.has(data.event)) {
+            events.get(data.event).forEach(fn => fn(...data.args));
+          }
+        };
+        socket.onopen = () => {
+          resolve({
+            user,
+            on(event, callback) {
+              if (event == 'message' || event == 'load/message') event = `${event}/${server}`
+              if (!events.has(event)) {
+                events.set(event, new Set());
+              }
+              events.get(event).add(callback);
+            },
+            emit(event, ...args) {
+              socket.send(
+                JSON.stringify({ event, args: [{ serverId: server, userId: user.id, channelId: channel }, ...args] })
+              );
+            },
+          });
+        };
+      });
+    }
+    function openUser(user){
+      let $user = document.querySelector('#user-info-container')
+      $user.innerHTML = ''
+      let bg = createElementDom('div', {id:'background-user'})
+      let img = createElementDom('img', {src:user.image, class:['author', 'user-info']})
+      let info = createElementDom('div', {id:'user-info'},
+        createElementDom('h2', {class:'name'}, user.name),
+        createElementDom('p', {class:'name-descriminator'}, `${user.name}#${user.descriminator}`),
+        createElementDom('div', {class:'line'}),
+        createElementDom('h4', {class:'title-info'},'ID'),
+        createElementDom('p', {class:'data-info'}, user.id)
+      )
+      setTimeout(()=>{
+        $user.appendChild(bg)
+        $user.appendChild(img)
+        $user.appendChild(info)
+      }, 50)
+    }
+    function toMessage(message) {
+      if (message.type == 'TEXT') return message.content
+      if (message.type == 'EMBED') return message.content.title || message.content.description
+    }
+    function noSetData(message='') {
+      const mentions = message.replace(/(<@(.+?)>)/g, function (...args) {
+        let [match, _, ...Args] = args;
+        let [str, pos, ...$$] = Args.reverse()
+        let $ = ['', ...$$.reverse()]
+        let user = members.find(member => member.id == $[1])
+
+        return user ? `@${user.name}` : '@deleted-user'
+      });
+      return mentions
+    }
+    function setData(message='') {
+      const urls = message.split(' ').map(data=>{
+        if(/http[s]?:\/\/.{1,}(([.].*){1,} | (:[0-9]{1,}))([\/].*)*/g.test(data)) return data.replace(/http[s]?:\/\/[.]{1,}([.].*){1,}([\/].*)*/g, match=>createElementDom('a', {href:match, class:['user']}, match))
+        return data
+      })
+      let data = []
+
+      urls.map(value=>{
+        if(typeof value == 'string'){
+          let mentions = []
+          value = ' ' + value;
+          let a =value.replace(/(<@(.+?)>)/g, function (...args) {
+            let [match, _, ...Args] = args;
+            let [str, pos, ...$$] = Args.reverse()
+            let $ = ['', ...$$.reverse()]
+            let user = members.find(member => member.id == $[1])
+
+            mentions.push(createElementDom('a', {class:['user'], onclick(){openUser(user)}}, user ? `@${user.name}` : '@deleted-user'))
+
+            return '\x00';
+          }).split('\x00');
+          a.forEach((value, i)=>{
+            data.push(value)
+            if(mentions[i])data.push(mentions[i])
+          });
+        }
+        else data.push(value)
+      })
+      return data
+    }
+    function noStyleMessage(message) {
+      return noSetData(message).replace(/[*]{2}(.+?)[*]{2}/g, '$1').replace(/[*]{1}(.+?)[*]{1}/g, '$1')
+    }
+    function styleMessage(message) {
+      let data = [];
+      setData(message).forEach(value=>{
+        if(typeof value == 'string'){
+          let special = {x00:[], x01:[], x02:[]};
+          value.replace(/[*]{3}(.+?)[*]{3}/g, (...args)=>{
+            let [match, _, ...Args] = args;
+            let [str, pos, ...$$] = Args.reverse()
+            let $ = ['', ...$$.reverse()]
+
+            special.x02.push(createElementDom('strong', null, createElementDom('i', null, $[1])))
+            return '\x02'
+          }).replace(/[*]{2}(.+?)[*]{2}/g, (...args)=>{
+            let [match, _, ...Args] = args;
+            let [str, pos, ...$$] = Args.reverse()
+            let $ = ['', ...$$.reverse()]
+
+            special.x01.push(createElementDom('strong', null, ...styleMessage($[1])))
+            return '\x01'
+          }).replace(/[*]{1}(.+?)[*]{1}/g, (...args)=>{
+            let [match, _, ...Args] = args;
+            let [str, pos, ...$$] = Args.reverse()
+            let $ = ['', ...$$.reverse()]
+
+            special.x00.push(createElementDom('i', null, ...styleMessage($[1])))
+            return '\x00'
+            
+          }).split('\x00').map((value0, i)=>{
+            value0.split('\x01').map((value1, j)=>{
+              value1.split('\x02').map((value2, k)=>{
+                data.push(value2)
+                if(special.x02[k])data.push(special.x02[k])
+              })
+              if(special.x01[j])data.push(special.x01[j])
+            })
+            if(special.x00[i])data.push(special.x00[i])
+          })
+        }else data.push(value)
+      })
+      return data
+    }
+    function messageToHTML(message) {
+      let regExp = new RegExp(`<@${localStorage.ID}>`, 'g')
+      let extraData = '';
+      let data = null;
+      if (message.type == 'TEXT'){
+        if(regExp.test(message.content))extraData='mention'
+        data = createElementDom('p', null, ...styleMessage(message.content))
+      }
+      if (message.type == 'EMBED') {
+        if(regExp.test(message.content.title) || regExp.test(message.content.description))extraData='mention'
+        let title = message.content.title ? createElementDom('p', {class:['embed', 'title']}, ...styleMessage(message.content.title)) : ''
+        let description = message.content.description ? createElementDom('p', {class:['embed', 'description']}, ...styleMessage(message.content.description)) : ''
+        data = createElementDom('div', {class:['embed']}, title, description)
+      }
+      return createElementDom('div', {class:['message', extraData]}, data)
+    }
+    function showMessage(author, message) {
+      let img = createElementDom('img', {src:author.image, class:['author'], onclick(){openUser(author)}})
+      let bot = ''
+      if (author.bot)
+        bot = createElementDom('img', {src:author.verified ? 'https://cdn.discordapp.com/attachments/817460175191146563/1050237979223920670/vot.PNG' : 'https://cdn.discordapp.com/attachments/817460175191146563/1049889649172156536/vot.PNG', class:['bot']})
+      let userName = createElementDom('div', {class:['userName'], onclick(){openUser(author)}}, createElementDom('p', null, author.name, bot))
+      let messageHTML = messageToHTML(message)
+      let data = createElementDom('div', {class:['data']}, userName, messageHTML)
+      let $message = [...document.querySelectorAll('.message-handler')].reverse()[0]
+      if ($message && $message.attributes.author.nodeValue == author.id) {
+        $message.children[1].appendChild(messageHTML)
+      } else {
+        let newMessageHTML = createElementDom('div', {class:['message-handler'], author:author.id}, img, data)
+        document.querySelector('div#messages').appendChild(newMessageHTML);
+      }
+    }
+
+    function myData(user){
+      $('div#mydata').forEach(console.log)
+      let $data = $('div#mydata')[0].element;
+      let img = createElementDom('img', {src:user.image, class:['author']})
+      let name = createElementDom('p', null, user.name)
+      $data.appendChild(img)
+      $data.appendChild(name)
+    }
+    window.addEventListener('load', async () => {
+      let notInfoContainer = ()=>{
+        document.querySelector('#user-info-container').innerHTML = '';
+      }
+      document.querySelector('#servers').addEventListener('click', notInfoContainer)
+      document.querySelector('#channels').addEventListener('click', notInfoContainer)
+      document.querySelector('#messages').addEventListener('click', notInfoContainer)
+      document.querySelector('#input').addEventListener('click', notInfoContainer)
+      const socket = await io();
+      
+      myData(socket.user)
+
+      socket.emit('online', { serverId: server, channelId: channel })
+      socket.on('message', (user, message, channelId) => {
+        let format = JSON.parse(atob(message))
+        createNotification({ text: noStyleMessage(toMessage(format)), author: user, onclick(){
+          if(channelId != channel)
+            location.href = `channel/${server}/${channelId}`
+        } })
+        if(channelId == channel)
+          showMessage(user, format)
+
+        const autoscroll = true;
+        if (autoscroll) {
+          const messages = document.querySelector('div#messages')
+          messages.scrollTo({ top: messages.scrollHeight })
+        }
+      });
+      socket.on('load/message', (user, message) => {
+        let format = JSON.parse(atob(message))
+        showMessage(user, format)
+        const messages = document.querySelector('div#messages')
+        messages.scrollTo({ top: messages.scrollHeight })
+      });
+      socket.on('reload', (messages) => {
+        document.querySelector('div#messages').innerHTML = ''
+        messages.forEach(message => {
+          let format = JSON.parse(atob(message.content))
+          showMessage(message.author, format)
+        })
+      })
+      socket.on('members', (users) => {
+        members = users;
+        let $members = document.querySelector('div#members');
+        $members.innerHTML = ''
+        users
+          .sort((a, b) => {
+            if (a.active == true && b.active == false) return -1;
+            else if (a.active == false && b.active == true) return 1;
+            let v = a.name.localeCompare(b.name)
+            if (v == 0) return a.descriminator - b.descriminator;
+            return v
+          })
+          .forEach(user => {
+            let $member = createElementDom('div', {class:['member'], onclick(){
+              openUser(user)
+            }},
+              createElementDom('img', {src:user.image, class:['author', `active-${user.active}`]}),
+              createElementDom('p', null, user.name)
+            )
+            $members.appendChild($member)
+          })
+      })
+      socket.on('channels', (channels) => {
+        let $channels = document.querySelector('div#channels');
+        $channels.innerHTML = ''
+        channels
+          .forEach(channel => {
+            let $channel = createElementDom('div', {class:['channel']},
+              createElementDom('a', {href:`/channel/${server}/${channel.id}`},
+                createElementDom('p', null, channel.name)
+              )
+            )
+            $channels.appendChild($channel)
+          })
+      })
+      socket.on('servers', (servers) => {
+        let $servers = document.querySelector('div#servers');
+        $servers.innerHTML = '';
+        servers
+          .forEach(server => {
+            let $server = createElementDom('div', {class:['server']},
+              createElementDom('a', {href:`/server/${server}`},
+                createElementDom('img', {src:'https://cdn-icons-png.flaticon.com/512/1946/1946429.png', class:['author']})
+              )
+            )
+            $servers.appendChild($server)
+          })
+        let add = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Medical_hospitalclinic_noemergency_beds.svg/120px-Medical_hospitalclinic_noemergency_beds.svg.png'
+        
+        let $server = createElementDom('div', {class:['server']},
+              createElementDom('a', null,
+                createElementDom('img', {src:add, class:['author'], onclick(){
+                  let $data = document.querySelector('#data')
+                  let $screen = document.querySelector('#extra-screen')
+                  $data.style.display = 'none'
+                  let $name_server = createElementDom('input', {type:'text', id:'server'})
+                  let $sendButton = createElementDom('button', {id:'server', onclick(){
+                    socket.emit('new-server', $name_server.value)
+                    $data.style.display = 'block'
+                    $screen.innerHTML = ''
+                  }}, 'crear')
+                  $screen.appendChild($name_server)
+                  $screen.appendChild($sendButton)
+                }})
+              )
+            )
+            $servers.appendChild($server)
+      })
+      function send(input = document.querySelector('input')) {
+        socket.emit('message', JSON.stringify({ type: 'TEXT', content: input.value }));
+        input.value = '';
+      }
+      document.addEventListener('keydown', tecla =>{
+        if(!tecla.ctrlKey && tecla.key == 'Enter')send()
+        else if(tecla.ctrlKey && tecla.key == 'Enter')document.querySelector('input').value += '\n'
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div id="extra-screen"></div>
+  <div id="data">
+    <div id="left">
+      <div id="servers"></div>
+      <div id="channels"></div>
+      <div id="mydata"></div>
+    </div>
+    <div id="center">
+      <div id="messages"></div>
+      <div id="input">
+        <input type="text" />
+      </div>
+      <div id="user-info-container"></div>
+    </div>
+    <div id="rigth">
+      <div id="members"></div>
+    </div>
+  </div>
+</body>
+
+</html>

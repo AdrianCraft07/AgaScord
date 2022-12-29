@@ -1,0 +1,140 @@
+div#center {
+    left: 200px;
+    position: absolute;
+    top: 0;
+    right: 250px;
+    height: 100%;
+}
+
+div.line {
+    margin: 10px;
+    height: 1px;
+    background: gray;
+}
+
+div#input {
+    position: absolute;
+    width: 100%;
+    height: 50px;
+    bottom: 5px;
+}
+
+div#input>input[type="text"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 0px;
+    background-color: #7776;
+    border-radius: 20px;
+    font-size: 20px;
+}
+
+div#messages {
+    position: absolute;
+    width: 100%;
+    height: 91%;
+    overflow: hidden;
+    overflow-y: scroll;
+    background: #7776;
+}
+
+div.message-handler {
+    width: 100%;
+    margin-bottom: 7px;
+    display: flex;
+}
+
+div.message {
+    display: flex;
+    padding: 5px;
+    border-radius: 10px;
+}
+
+div.message.mention {
+    border-radius: 0%;
+    background: var(--message-mention-background);
+}
+
+img.bot {
+    width: 28px;
+    height: 15px;
+    margin-left: 5px;
+}
+
+p {
+    font-family: system-ui;
+    margin: 0;
+}
+
+img.author {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: gray;
+    margin: 5px;
+    cursor: pointer;
+}
+
+div.embed {
+    background-color: var(--embed-color);
+    border-color: var(--embed-color);
+    border-left-color: var(--custom);
+    border-style: solid;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+
+p.embed.description {
+    font-size: 15px;
+}
+
+p.embed.title {
+    font-size: 17px;
+}
+
+div#user-info-container {
+    right: 0;
+    bottom: 5px;
+    background: var(--info-container-background);
+    position: absolute;
+    border-radius: 10px;
+    width: 250px;
+}
+
+div#background-user {
+    position: relative;
+    background: var(--custom);
+    top: 0;
+    width: 100%;
+    height: 50px;
+    border-radius: 10px 10px 0 0;
+}
+
+img.author.user-info {
+    height: 50px;
+    width: 50px;
+    top: -25px;
+    left: 10px;
+    position: relative;
+    border: 8px solid var(--info-container-background)
+}
+
+div#user-info {
+    border-radius: 10px;
+    background: var(--user-info-background);
+    margin: 10px;
+    padding: 10px;
+}
+
+div#user-info>.name-descriminator {
+    color: var(--user-descriminator-info)
+}
+
+.title-info {
+    color: var(--user-title-info)
+}
+
+.data-info {
+    color: var(--user-data-info)
+}

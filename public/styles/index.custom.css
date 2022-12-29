@@ -1,0 +1,10 @@
+:r:oot{
+    --background: url(https://agacraft.ga/src/img/fondo.png);
+    --message-mention-background: rgba(255, 0, 0, 0.2);
+    --embed-color: #3333;
+    --user-mention-background: rgba(255, 0, 0, 0.4);
+    --info-container-background: #0003;
+    --user-info-background: #0006;
+    --embed-color: #3333;
+    --custom: red;
+}

@@ -1,0 +1,10 @@
+{
+  "file": "dist/index.js",
+  "ignore": [],
+  "extensions": [
+    "js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

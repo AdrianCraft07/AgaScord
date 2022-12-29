@@ -1,0 +1,25 @@
+{
+  "name": "agascord",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsc && node .",
+    "bot": "tsc && node dist/testBot"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@agacraft/http": "^2.1.3",
+    "nodemailer": "^6.8.0",
+    "pull-ws": "^3.3.2",
+    "waga": "^1.2.2",
+    "ws": "^8.10.0"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.6",
+    "@types/ws": "^8.5.3",
+    "runaga": "^1.2.0",
+    "typescript": "^4.9.3"
+  }
+}

@@ -1,0 +1,59 @@
+@import url(/styles/default.css);
+@import url(/styles/index.rigth.css);
+@import url(/styles/index.center.css);
+@import url(/styles/index.left.css);
+
+:root{
+    --message-mention-background: rgba(255, 255, 0, 0.2);
+    --info-container-background: #333;
+    --user-mention-background: rgb(0 120 255 / 40%);
+    --user-info-background: #222;
+    --embed-color: #333;
+    --custom: red;
+    --user-status-online: #0f0;
+    --user-status-offline: #f00;
+    --user-title-info: white;
+    --user-data-info: gray;
+    --user-descriminator-info: gray;
+}
+
+div.data {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+a.user {
+    background: var(--user-mention-background);
+    text-decoration: none;
+    border-radius: 4px;
+    padding-right: 2px;
+    padding-left: 2px;
+    cursor: pointer;
+}
+
+div#extra-screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+input#server {
+    color: white;
+    background: #444;
+    width: 30%;
+    height: 40px;
+    font-size: 30px;
+}
+
+button#server {
+    color: white;
+    background: #444;
+    height: 30px;
+    width: 20%;
+    font-size: 20px;
+}
